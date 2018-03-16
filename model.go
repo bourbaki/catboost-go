@@ -4,6 +4,20 @@ package catboost
 #cgo linux LDFLAGS: -lcatboostmodel
 #include <stdbool.h>
 #include <model_calcer_wrapper.h>
+static char**makeCharArray(int size) {
+        return calloc(sizeof(char*), size);
+}
+
+static void setArrayString(char **a, char *s, int n) {
+        a[n] = s;
+}
+
+static void freeCharArray(char **a, int size) {
+        int i;
+        for (i = 0; i < size; i++)
+                free(a[i]);
+        free(a);
+}
 */
 import "C"
 
@@ -11,6 +25,13 @@ import (
 	"fmt"
 	"unsafe"
 )
+
+func makeCStringArrayPointer(array []string) **C.char {
+	cargs := C.makeCharArray(C.int(len(sargs)))
+	for i, s := range array {
+		C.setArrayString(cargs, C.CString(s), C.int(i))
+	}
+}
 
 type CatBoostModel struct {
 	Handler unsafe.Pointer
@@ -40,8 +61,19 @@ func LoadCatBoostModelFromFile(filename string) (*CatBoostModel, error) {
 func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats [][]string, catLength int) ([]float64, error) {
 	nSamples := len(floats)
 	results := make([]float64, nSamples)
+
 	floatsC := make([]*C.float, nSamples)
+	for i, v := range floats {
+		floatsC[i] = (*C.float)(&v[0])
+	}
+
 	catsC := make([]**C.char, nSamples)
+	for i, v := range cats {
+		pointer = makeCStringArrayPointer(v)
+		defer C.freeCharArray(pointer, C.int(len(pointer)))
+		catC[i] = pointer
+	}
+
 	C.CalcModelPrediction(
 		model.Handler,
 		C.size_t(nSamples),

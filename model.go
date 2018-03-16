@@ -1,4 +1,5 @@
 package catboost
+
 /*
 #cgo linux LDFLAGS: -lcatboostmodel
 #include <stdbool.h>
@@ -23,15 +24,30 @@ func (model *CatBoostModel) GetCatFeaturesCount() int {
 	return int(C.GetCatFeaturesCount(model.Handler))
 }
 
+func (model *CatBoostModel) Close() {
+	C.ModelCalcerDelete(model.Handler)
+}
+
 func LoadCatBoostModelFromFile(filename string) (*CatBoostModel, error) {
 	model := &CatBoostModel{}
-	model.Handler = C.ModelCalcerCreate() 
-	if(!C.LoadFullModelFromFile(model.Handler, C.CString(filename))) {
+	model.Handler = C.ModelCalcerCreate()
+	if !C.LoadFullModelFromFile(model.Handler, C.CString(filename)) {
 		return nil, fmt.Errorf("Cannot open model")
 	}
 	return model, nil
 }
 
-func (model *CatBoostModel) Predict(floats []float32, cats []string) (float64, error) {
+func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats [][]string, catLength int) ([]float64, error) {
+	nSamples := len(floats)
+	results := make([]float64, nSamples)
+	cats := make([]**C.char, nSamples)
+	C.CalcModelPrediction(
+		model.Handler,
+		C.size_t(nSamples),
+		(**C.float)(&floats[0]),
+		C.size_t(floatLength),
+		(***C.char)(&cats[0]),
+		C.size_t(nSamples),
+	)
 	return 0.0, nil
 }

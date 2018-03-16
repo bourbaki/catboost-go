@@ -24,6 +24,7 @@ import "C"
 
 import (
 	"fmt"
+	"math"
 	"unsafe"
 )
 
@@ -86,5 +87,9 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 		(*C.double)(&results[0]),
 		C.size_t(nSamples),
 	)
+
+	for i, _ := range results {
+		result[i] = 1.0 / (1.0 + math.Exp(-results[i]))
+	}
 	return results, nil
 }

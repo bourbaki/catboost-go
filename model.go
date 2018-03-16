@@ -45,7 +45,7 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 	C.CalcModelPrediction(
 		model.Handler,
 		C.size_t(nSamples),
-		(**C.float)(&floatC[0]),
+		(**C.float)(&floatsC[0]),
 		C.size_t(floatLength),
 		(***C.char)(&catsC[0]),
 		C.size_t(catLength),

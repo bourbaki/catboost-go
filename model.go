@@ -2,6 +2,7 @@ package catboost
 
 /*
 #cgo linux LDFLAGS: -lcatboostmodel
+#include <stdlib.h>
 #include <stdbool.h>
 #include <model_calcer_wrapper.h>
 static char**makeCharArray(int size) {
@@ -27,10 +28,11 @@ import (
 )
 
 func makeCStringArrayPointer(array []string) **C.char {
-	cargs := C.makeCharArray(C.int(len(sargs)))
+	cargs := C.makeCharArray(C.int(len(array)))
 	for i, s := range array {
 		C.setArrayString(cargs, C.CString(s), C.int(i))
 	}
+	return cargs
 }
 
 type CatBoostModel struct {
@@ -69,9 +71,9 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 
 	catsC := make([]**C.char, nSamples)
 	for i, v := range cats {
-		pointer = makeCStringArrayPointer(v)
+		pointer := makeCStringArrayPointer(v)
 		defer C.freeCharArray(pointer, C.int(len(pointer)))
-		catC[i] = pointer
+		catsC[i] = pointer
 	}
 
 	C.CalcModelPrediction(

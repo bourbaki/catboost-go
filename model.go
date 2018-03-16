@@ -5,7 +5,7 @@ package catboost
 #include <stdlib.h>
 #include <stdbool.h>
 #include <model_calcer_wrapper.h>
-static char**makeCharArray(int size) {
+static char** makeCharArray(int size) {
         return calloc(sizeof(char*), size);
 }
 

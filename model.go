@@ -89,7 +89,7 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 	)
 
 	for i, _ := range results {
-		result[i] = 1.0 / (1.0 + math.Exp(-results[i]))
+		results[i] = 1.0 / (1.0 + math.Exp(-results[i]))
 	}
 	return results, nil
 }

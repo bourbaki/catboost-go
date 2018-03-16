@@ -72,7 +72,7 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 	catsC := make([]**C.char, nSamples)
 	for i, v := range cats {
 		pointer := makeCStringArrayPointer(v)
-		defer C.freeCharArray(pointer, C.int(len(pointer)))
+		defer C.freeCharArray(pointer, C.int(len(v)))
 		catsC[i] = pointer
 	}
 

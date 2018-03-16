@@ -40,13 +40,13 @@ func LoadCatBoostModelFromFile(filename string) (*CatBoostModel, error) {
 func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats [][]string, catLength int) ([]float64, error) {
 	nSamples := len(floats)
 	results := make([]float64, nSamples)
-	cats := make([]**C.char, nSamples)
+	catsC := make([]**C.char, nSamples)
 	C.CalcModelPrediction(
 		model.Handler,
 		C.size_t(nSamples),
 		(**C.float)(&floats[0]),
 		C.size_t(floatLength),
-		(***C.char)(&cats[0]),
+		(***C.char)(&catsC[0]),
 		C.size_t(nSamples),
 	)
 	return 0.0, nil

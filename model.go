@@ -2,6 +2,7 @@ package catboost
 
 /*
 #cgo linux LDFLAGS: -lcatboostmodel
+#cgo darwin LDFLAGS: -lcatboostmodel
 #include <stdlib.h>
 #include <stdbool.h>
 #include <model_calcer_wrapper.h>
@@ -24,9 +25,14 @@ import "C"
 
 import (
 	"fmt"
-	"math"
 	"unsafe"
 )
+
+func getError() error {
+	messageC := C.GetErrorString()
+	message := C.GoString(messageC)
+	return fmt.Errorf(message)
+}
 
 func makeCStringArrayPointer(array []string) **C.char {
 	cargs := C.makeCharArray(C.int(len(array)))
@@ -36,32 +42,38 @@ func makeCStringArrayPointer(array []string) **C.char {
 	return cargs
 }
 
-type CatBoostModel struct {
+// Model is a wrapper over ModelCalcerHandler
+type Model struct {
 	Handler unsafe.Pointer
 }
 
-func (model *CatBoostModel) GetFloatFeaturesCount() int {
+// GetFloatFeaturesCount returns a number of float features used for training
+func (model *Model) GetFloatFeaturesCount() int {
 	return int(C.GetFloatFeaturesCount(model.Handler))
 }
 
-func (model *CatBoostModel) GetCatFeaturesCount() int {
+// GetCatFeaturesCount returns a number of categorical features used for training
+func (model *Model) GetCatFeaturesCount() int {
 	return int(C.GetCatFeaturesCount(model.Handler))
 }
 
-func (model *CatBoostModel) Close() {
+// Close deletes model handler
+func (model *Model) Close() {
 	C.ModelCalcerDelete(model.Handler)
 }
 
-func LoadCatBoostModelFromFile(filename string) (*CatBoostModel, error) {
-	model := &CatBoostModel{}
+// LoadFullModelFromFile loads model from file
+func LoadFullModelFromFile(filename string) (*Model, error) {
+	model := &Model{}
 	model.Handler = C.ModelCalcerCreate()
 	if !C.LoadFullModelFromFile(model.Handler, C.CString(filename)) {
-		return nil, fmt.Errorf("Cannot open model")
+		return nil, getError()
 	}
 	return model, nil
 }
 
-func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats [][]string, catLength int) ([]float64, error) {
+// CalcModelPrediction returns raw predictions for specified data points
+func (model *Model) CalcModelPrediction(floats [][]float32, floatLength int, cats [][]string, catLength int) ([]float64, error) {
 	nSamples := len(floats)
 	results := make([]float64, nSamples)
 
@@ -77,7 +89,7 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 		catsC[i] = pointer
 	}
 
-	C.CalcModelPrediction(
+	if !C.CalcModelPrediction(
 		model.Handler,
 		C.size_t(nSamples),
 		(**C.float)(&floatsC[0]),
@@ -86,10 +98,9 @@ func (model *CatBoostModel) Predict(floats [][]float32, floatLength int, cats []
 		C.size_t(catLength),
 		(*C.double)(&results[0]),
 		C.size_t(nSamples),
-	)
-
-	for i, _ := range results {
-		results[i] = 1.0 / (1.0 + math.Exp(-results[i]))
+	) {
+		return nil, getError()
 	}
+
 	return results, nil
 }

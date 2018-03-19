@@ -5,7 +5,7 @@ Simple wrapper of [CatBoost C library](https://tech.yandex.com/catboost/doc/dg/c
 CatBoost library is assumed to be installed and all its includes and library files are assumed to be found in corresponding paths. One way to do it is using environment variables:
 ```sh
 git clone https://github.com/catboost/catboost.git
-cd catboost/catboost/libs/model_interface && ../../ya make -r .
+cd catboost/catboost/libs/model_interface && ../../../ya make -r .
 export CATBOOST_DIR=$(pwd)
 export C_INCLUDE_PATH=$CATBOOST_DIR:$C_INCLUDE_PATH
 export LIBRARY_PATH=$CATBOOST_DIR:$LIBRARY_PATH
